@@ -8,7 +8,10 @@ phpVMS - Virtual Airline Administration Software
    Creative Commons Attribution Non-commercial Share Alike (by-nc-sa)
    View license.txt in the root, or visit:
 	http://creativecommons.org/licenses/by-nc-sa/3.0/
+
+
 ---
+
 
 INSTALLATION
 
@@ -35,6 +38,7 @@ Upload the remaining contents to your site.
 
 ---
 
+
 USAGE
 
 During usage of this script keep in mind that, as a security measure, all files uploaded will be renamed to a random sequence to numbers in the format of xxxxxxxxxx-xxxxxx But it will keep it's original extension.
@@ -58,6 +62,7 @@ Keep in mind this addon will not delete a file if it was not uploaded by this sc
 
 
 ---
+
 
  For more information on phpVMS, visit www.phpvms.net
 	Forums: http://forum.phpvms.net
