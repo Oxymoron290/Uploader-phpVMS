@@ -1,7 +1,7 @@
 <?php
 
-define('SITE_URL', 'http://example.net');
-define('SITE_ROOT',  str_replace('', '', dirname(__FILE__)));
+define('SITE_URL', 'http://usahq.net/wingsonair/woa');
+define('SITE_ROOT',  str_replace('core/common', '', dirname(__FILE__)));
 define('DS', '/');
 
 class Uploader
@@ -49,7 +49,8 @@ class Uploader
         $check = self::CheckFile($file);
         if($check !== true){
             //return false;
-            return $check;
+            return self::GetError($check);
+            //return $check;
         }
         
         
@@ -119,7 +120,7 @@ class Uploader
     }
     
     
-    private static function GetError($file){
+    private static function GetError($error){
             $fileErrors = array(
             1 => "UPLOAD_ERR_INI_SIZE: ",
             2 => "UPLOAD_ERR_FORM_SIZE: ",
@@ -139,12 +140,12 @@ class Uploader
             8 => 'The type of file uploaded is not allowed.',
             9 => 'There was an unknown error while attempting to upload.'
             );
-            return $fileErrors[$file['error']].$errorDetail[$file['error']];
+            return $fileErrors[$error].$errorDetail[$error];
     }
 }
 
 
-
+echo '<br />';
 $target = SITE_URL.DS.'lib/images/awards/testing';
 $target = SITE_ROOT.'lib/images/awards/testing';
 if(isset($_POST['action']) && isset($_FILES['upload'])){
@@ -152,7 +153,11 @@ if(isset($_POST['action']) && isset($_FILES['upload'])){
     if($test == false){
         echo 'that file is not allowed or uploading is disabled.<br />'.$_FILES['upload']['name'].' Denied.';
     }else{
-        echo 'Success!<br /><a href="?view='.$test.'">Click here</a> To see the file.';
+        if(stripos($test, SITE_URL.DS) !== false){
+            echo 'Success!<br /><a href="?view='.$test.'">Click here</a> To see the file.';
+        }else{
+            echo $test;
+        }
     }
 }
 if(isset($_GET['view'])){

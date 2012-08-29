@@ -77,7 +77,7 @@ class Uploader extends CodonData {
                 self::LogUpload($target, $target2);
                 return $target2;
             }else{
-                LogData::addLog(Auth::$userinfo->pilotid, self::GetError($file));
+                LogData::addLog(Auth::$userinfo->pilotid, self::GetError(intval($file['error'])));
                 return false;
             }
         }else{
@@ -210,7 +210,7 @@ class Uploader extends CodonData {
     }
     
     
-    private static function GetError($file){
+    private static function GetError($error){
             $fileErrors = array(
             1 => "UPLOAD_ERR_INI_SIZE: ",
             2 => "UPLOAD_ERR_FORM_SIZE: ",
@@ -230,6 +230,6 @@ class Uploader extends CodonData {
             8 => 'The type of file uploaded is not allowed.',
             9 => 'There was an unknown error while attempting to upload.'
             );
-            return $fileErrors[$file['error']].$errorDetail[$file['error']];
+            return $fileErrors[$error].$errorDetail[$error];
     }
 }
