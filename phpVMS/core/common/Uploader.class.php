@@ -19,6 +19,10 @@
 
 
 class Uploader extends CodonData {
+    
+    const uploads_enabled = true;
+    protected static $uploads_ALLOWED = array("jpg","jpeg","gif","png"); // Allowed File Types, Mainly Images
+    protected static $uploads_DENIED = array("php","htm","html","xml","css","cgi","xls","rtf","ppt","pdf","dll","swf","flv","avi","wmv","mov","class","bat","sh","java","iso","c","cpp","ini","js"); // Strictly Disallowed File types
 
     /**
      * Method used to check the folder you are uploading to.
@@ -28,23 +32,16 @@ class Uploader extends CodonData {
      * @return bool bool
      * 
      */
-    public static function CheckUpload($folder=false){
-        if(Config::Get('UPLOADS_ENABLED') == false){
-            return false;
-        }
-        
-        if($folder != false){
-            if($folder <= ''){
-                return false;
-            }
-            if(is_writeable($folder)){
+    public function CheckUpload($folder=false){
+        if(self::uploads_enabled == true){
+            if($folder == false){
                 return true;
+                LogData::addLog(Auth::$userinfo->pilotid, 'A check for file uploads was conducted with no target folder specified.');
+            }else{
+                if($folder > '' && is_writeable($folder)){
+                    return true;
+                }
             }
-        }
-        
-        if($folder == false && Config::Get('UPLOADS_ENABLED') == true){
-            LogData::addLog(Auth::$userinfo->pilotid, 'A check for file uploads was conducted with no target folder specified.');
-            return true;
         }
         return false;
     }
@@ -59,13 +56,13 @@ class Uploader extends CodonData {
      * 
      */
     public function Upload($file, $target){
+        $target = str_replace(SITE_URL.DS, SITE_ROOT, $target);
         if(self::CheckUpload($target) == false){
             LogData::addLog(Auth::$userinfo->pilotid, 'A file upload was attempted, but denied due to local settings.');
             return false;
         }
-
         $check = self::CheckFile($file);
-        if($check != true){
+        if($check !== true){
             LogData::addLog(Auth::$userinfo->pilotid, self::GetError($check));
             return false;
         }
@@ -151,15 +148,16 @@ class Uploader extends CodonData {
         if($file['error'] != 0){
             return $file['error'];
         }
-        if(in_array(end(explode(".",strtolower($file['name']))), Config::Get('UPLOADS_DENIED'))){
+        
+        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_DENIED)){
             $file['error'] = 8;
         }
         
-        if(!in_array(end(explode(".",strtolower($file['name']))), Config::Get('UPLOADS_ALLOWED'))){
+        if(!in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
             $file['error'] = 8;
         }
         
-        if(in_array(end(explode(".",strtolower($file['name']))), Config::Get('UPLOADS_ALLOWED'))){
+        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
             $file['error'] = 0;
         }
         

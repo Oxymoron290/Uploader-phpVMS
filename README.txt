@@ -27,22 +27,18 @@ Normally located in the core directory, the table prefix is normally defined on 
 Run the SQL queries and then delete the file uploader.sql.txt
 
 
-Upload the remaining contents to your site and edit your local.config.php to add the following lines:
+Upload the remaining contents to your site.
 
-
-Config::Set('UPLOADS_ENABLED', TRUE);
-
-
-Config::Set('UPLOADS_ALLOWED', array("jpg","jpeg","gif","png")); // Allowed File Types, Mainly Images
-
-
-Config::Set('UPLOADS_DENIED', array("php","htm","html","xml","css","cgi","xls","rtf","ppt","pdf","swf","flv","avi","wmv","mov","class","bat","sh","java","iso","c","cpp","ini","js")); // Strictly Denied File types
 
 ---
 
 USAGE
 
 During usage of this script keep in mind that, as a security measure, all files uploaded will be renamed to a random sequence to numbers in the format of xxxxxxxxxx-xxxxxx But it will keep it's original extension.
+
+
+To edit any options, they will be located in core/common/Uploader.class.php on lines 23, 24, 25
+
 
 To use this addon create an HTML forum and make sure it has the enctype attribute set to multipart/form-data like so <form enctype="multipart/form-data"> and you have a file input element, for example: <input type="file" name=HTML_FILE_UPLOAD_ELEMENT />
 
