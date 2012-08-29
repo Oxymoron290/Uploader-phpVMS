@@ -1,0 +1,11 @@
+--
+-- Table structure for table `phpvms_uploads`
+--
+
+CREATE TABLE  `phpvms_uploads` (
+`id` INT( 11 ) NOT NULL AUTO_INCREMENT ,
+`site_root` VARCHAR( 256 ) NOT NULL ,
+`site_url` VARCHAR( 256 ) NOT NULL ,
+`pilotID` INT( 11 ) NOT NULL ,
+PRIMARY KEY (  `id` )
+) ENGINE = MYISAM
