@@ -27,6 +27,9 @@ Normally located in the core directory, the table prefix is normally defined on 
 Run the SQL queries and then delete the file uploader.sql.txt
 
 
+Delete test.php and ~test.htm if they exist
+
+
 Upload the remaining contents to your site.
 
 
