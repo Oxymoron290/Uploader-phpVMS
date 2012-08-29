@@ -122,8 +122,6 @@ class Uploader extends CodonData {
         $myresult = DB::get_row($sql);
         if(isset($myresult->pilotID)){
             return $myresult->pilotID;
-        }else{
-            return 'there was an error';
         }
         return false;
     }
