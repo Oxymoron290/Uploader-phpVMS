@@ -148,7 +148,6 @@ return true;
     }
 }
 
-$target = "http://usahq.net/wingsonair/woa/lib/images/awards";
 
 ?>
 <br /><br />
