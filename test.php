@@ -1,15 +1,14 @@
 <?php
 
 define('SITE_URL', 'http://example.net');
-define('SITE_ROOT', dirname(__FILE__));
+define('SITE_ROOT',  str_replace('', '', dirname(__FILE__)));
 define('DS', '/');
 
 class Uploader
 {
-    protected $uploads_ENABLED = TRUE;
-    protected $uploads_ALLOWED = array("jpg","jpeg","gif","png"); // Allowed File Types, Mainly Images
-    protected $uploads_DENIED = array("php","htm","html","xml","css","cgi","xls","rtf","ppt","pdf","swf","flv","avi","wmv","mov","class","bat","sh","java","iso","c","cpp","ini","js"); // Strictly Disallowed File types
-
+    const uploads_enabled = true;
+    protected static $uploads_ALLOWED = array("jpg","jpeg","gif","png"); // Allowed File Types, Mainly Images
+    protected static $uploads_DENIED = array("php","htm","html","xml","css","cgi","xls","rtf","ppt","pdf","dll","swf","flv","avi","wmv","mov","class","bat","sh","java","iso","c","cpp","ini","js"); // Strictly Disallowed File types
 
     /**
      * Method used to check the folder you are uploading to.
@@ -19,22 +18,15 @@ class Uploader
      * @return bool bool
      * 
      */
-    public static function CheckUpload($folder=false){
-        if($uploads_ENABLED == false){
-            return false;
-        }
-        
-        if($folder != false){
-            if($folder <= ''){
-                return false;
-            }
-            if(is_writeable($folder)){
+    public function CheckUpload($folder=false){
+        if(self::uploads_enabled == true){
+            if($folder == false){
                 return true;
+            }else{
+                if($folder > '' && is_writeable($folder)){
+                    return true;
+                }
             }
-        }
-        
-        if($folder == false && $uploads_ENABLED == true){
-            return true;
         }
         return false;
     }
@@ -49,15 +41,17 @@ class Uploader
      * 
      */
     public function Upload($file, $target){
-return true;
+        $target = str_replace(SITE_URL.DS, SITE_ROOT, $target);
         if(self::CheckUpload($target) == false){
             //LogData::addLog(Auth::$userinfo->pilotid, 'A file upload was attempted, but denied due to local settings.');
             return false;
         }
         $check = self::CheckFile($file);
-        if($check == false){
-            return false;
+        if($check !== true){
+            //return false;
+            return $check;
         }
+        
         
         $pic = self::Rename($file['name']);
         $target = $target.'/'.$pic;
@@ -65,7 +59,7 @@ return true;
         if(is_uploaded_file($file['tmp_name'])){
             if(move_uploaded_file($file['tmp_name'], $target)){
                 $target2 = str_replace(SITE_ROOT, SITE_URL.DS, $target);
-                self::LogUpload($target, $target2);
+                //self::LogUpload($target, $target2);
                 return $target2;
             }else{
                 return false;
@@ -80,15 +74,16 @@ return true;
         if($file['error'] != 0){
             return $file['error'];
         }
-        if(in_array(end(explode(".",strtolower($file['name']))), $uploads_DENIED)){
+        
+        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_DENIED)){
             $file['error'] = 8;
         }
         
-        if(!in_array(end(explode(".",strtolower($file['name']))), $uploads_ALLOWED)){
+        if(!in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
             $file['error'] = 8;
         }
         
-        if(in_array(end(explode(".",strtolower($file['name']))), $uploads_ALLOWED)){
+        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
             $file['error'] = 0;
         }
         
@@ -149,9 +144,24 @@ return true;
 }
 
 
+
+$target = SITE_URL.DS.'lib/images/awards/testing';
+$target = SITE_ROOT.'lib/images/awards/testing';
+if(isset($_POST['action']) && isset($_FILES['upload'])){
+    $test = Uploader::Upload($_FILES['upload'], $target);
+    if($test == false){
+        echo 'that file is not allowed or uploading is disabled.<br />'.$_FILES['upload']['name'].' Denied.';
+    }else{
+        echo 'Success!<br /><a href="?view='.$test.'">Click here</a> To see the file.';
+    }
+}
+if(isset($_GET['view'])){
+    echo '<img src="'.$_GET['view'].'" /><br />';
+}
 ?>
 <br /><br />
 <form action="#" method="post" enctype="multipart/form-data" >
-File to upload: <input type="file" name="upload" />
+File to upload: <input type="file" name="upload" /><br />
+<input type="hidden" name="action" value="true" />
 <input type="submit" value="Submit File."/>
 </form>
