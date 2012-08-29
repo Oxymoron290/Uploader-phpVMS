@@ -8,12 +8,11 @@ phpVMS - Virtual Airline Administration Software
    Creative Commons Attribution Non-commercial Share Alike (by-nc-sa)
    View license.txt in the root, or visit:
 	http://creativecommons.org/licenses/by-nc-sa/3.0/
-
-
----
+=========================================================
 
 
 INSTALLATION
+------------
 
 Make a backup of your site, and it's database.
 
@@ -36,11 +35,9 @@ Delete test.php and ~test.php.htm if they exist
 Upload the remaining contents to your site.
 
 
----
-
 
 USAGE
-
+-----
 During usage of this script keep in mind that, as a security measure, all files uploaded will be renamed to a random sequence to numbers in the format of xxxxxxxxxx-xxxxxx But it will keep it's original extension.
 
 
@@ -59,10 +56,7 @@ Where $target is the uploaded file to be deleted, use of SITE_ROOT constant is r
 
 
 Keep in mind this addon will not delete a file if it was not uploaded by this script.
-
-
----
-
+-------------------------------------------------------------------------------------
 
  For more information on phpVMS, visit www.phpvms.net
 	Forums: http://forum.phpvms.net
