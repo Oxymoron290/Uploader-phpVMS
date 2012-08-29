@@ -44,7 +44,7 @@ During usage of this script keep in mind that, as a security measure, all files 
 To edit any options, they will be located in core/common/Uploader.class.php on lines 23, 24, 25
 
 
-To use this addon create an HTML forum and make sure it has the enctype attribute set to multipart/form-data like so &lt;form enctype="multipart/form-data"&gt; and you have a file input element, for example: &lt;input type="file" name=HTML_FILE_UPLOAD_ELEMENT /&gt;
+To use this addon create an HTML forum and make sure it has the enctype attribute set to multipart/form-data like so <form enctype="multipart/form-data"> and you have a file input element, for example: <input type="file" name=HTML_FILE_UPLOAD_ELEMENT />
 
 When a user submits the form with a file process with php it like so:
 Uploader::Upload($_FILES[HTML_FILE_UPLOAD_ELEMENT], $target);
