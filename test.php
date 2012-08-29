@@ -121,6 +121,7 @@ class Uploader
     
     
     private static function GetError($error){
+            $error = intval($error);
             $fileErrors = array(
             1 => "UPLOAD_ERR_INI_SIZE: ",
             2 => "UPLOAD_ERR_FORM_SIZE: ",
