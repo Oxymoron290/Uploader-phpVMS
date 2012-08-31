@@ -1,11 +1,13 @@
 <?php
 
-define('SITE_URL', 'http://localhost');
-define('SITE_ROOT',  str_replace('', '', dirname(__FILE__)));
 define('DS', DIRECTORY_SEPARATOR);
+if(substr(dirname(__FILE__), -1) != DS){$site_root = dirname(__FILE__).DS;}
+define('SITE_ROOT', str_replace('', '', $site_root));
+define('SITE_URL', 'http://localhost');
 
 class Uploader
 {
+    
     const uploads_enabled = true;
     protected static $uploads_ALLOWED = array("jpg","jpeg","gif","png"); // Allowed File Types, Mainly Images
     protected static $uploads_DENIED = array("php","htm","html","xml","css","cgi","xls","rtf","ppt","pdf","dll","swf","flv","avi","wmv","mov","class","bat","sh","java","iso","c","cpp","ini","js"); // Strictly Disallowed File types
@@ -22,6 +24,7 @@ class Uploader
         if(self::uploads_enabled == true){
             if($folder == false){
                 return true;
+                //LogData::addLog(Auth::$userinfo->pilotid, 'A check for file uploads was conducted with no target folder specified.');
             }else{
                 if($folder > '' && is_writeable($folder)){
                     return true;
@@ -41,43 +44,79 @@ class Uploader
      * 
      */
     public static function Upload($file, $target){
+        if($file['error'] == 4) return false;
+        
+        $tmpFile = pathinfo($file['tmp_name']);
+        $tmpFile = $tmpFile['dirname'].DS.$tmpFile['basename'];
+        
+        if(!file_exists($tmpFile)) return false;
+        
         $target = str_replace(SITE_URL.DS, SITE_ROOT, $target);
         if(self::CheckUpload($target) == false){
             //LogData::addLog(Auth::$userinfo->pilotid, 'A file upload was attempted, but denied due to local settings.');
+            unlink($tmpFile);
             return false;
         }
+        
         $check = self::CheckFile($file);
         if($check !== true){
-            //return false;
-            return self::GetError($check);
-            //return $check;
+            //LogData::addLog(Auth::$userinfo->pilotid, self::GetError($check));
+            unlink($tmpFile);
+            return false;
         }
-        
-        
-        $pic = self::Rename($file['name']);
-        $target = $target.'/'.$pic;
-        
+            
+        $pic = self::Rename($file);
+        $target = $target.DS.$pic;
+            
         if(is_uploaded_file($file['tmp_name'])){
-            if(move_uploaded_file($file['tmp_name'], $target)){
-                $target2 = str_replace(SITE_ROOT, SITE_URL.DS, $target);
-                //self::LogUpload($target, $target2);
-                return $target2;
+                if(move_uploaded_file($file['tmp_name'], $target)){
+                    $target2 = str_replace(SITE_ROOT, SITE_URL.DS, $target);
+                    //LogData::addLog(Auth::$userinfo->pilotid, 'The file "'.$file['name'].'" was successfully uploaded <a href="'.$target2.'">here</a>');
+                    //self::LogUpload($target, $target2);
+                    if(file_exists($tmpFile)) unlink($tmpFile); // file should have been moved so this should never happen.
+                    return $target2;
+                }else{
+                    //LogData::addLog(Auth::$userinfo->pilotid, self::GetError(intval($file['error'])));
+                    if(file_exists($tmpFile)) unlink($tmpFile); // The only case this would happen is if the file wasn't moveable... this should never happen actually.
+                    return false;
+                }
             }else{
-                return false;
+                //LogData::addLog(Auth::$userinfo->pilotid, 'The file "'.$file['name'].'" was not uploaded due to a possible attack from '.$_SERVER["REMOTE_ADDR"]);
+                //unlink($tmpFile); // We will NOT want to delete the file it if !is_uploaded_file()
+                return false; // File was not uploaded via HTTP POST
             }
-        }else{
-            return false; // File was not uploaded via HTTP POST
+    }
+    
+    
+    /**
+     * Method used to delete an uploaded file.
+     * 
+     * @param string $url the exact URL to the file.
+     * @return bool bool
+     * 
+     */
+    public static function DeleteUpload($url){
+        if(self::GetUpload($url) != false){
+            $target = str_replace(SITE_URL.DS, SITE_ROOT, $url);
+            if(file_exists($target) && is_writeable($target)){
+                unlink($target);
+                self::RemoveLog($url);
+                return true;
+            }
         }
+        return false;
     }
     
     
     private static function CheckFile($file){
         $file['name'] = strtolower($file['name']);
+        //$ext = self::findexts($file['name']); // Changed as requested by Nabeel Shahzad
+        $ext = pathinfo($file['name']);
+        $ext = $ext['extension'];
+        
         if($file['error'] != 0){
             return $file['error'];
         }
-                
-        $ext = self::findexts($file['name']);
         
         if(in_array($ext, self::$uploads_DENIED)){
             $file['error'] = 8;
@@ -104,8 +143,10 @@ class Uploader
     }
     
     
-    private static function Rename($filename){
-        $ext = self::findexts($filename);
+    private static function Rename($file){
+        //$ext = self::findexts($file); // Changed as requested by Nabeel Shahzad
+        $ext = pathinfo($file['name']);
+        $ext = $ext['extension'];
         $ran = time().'-';
         $ran .= rand(111111, 999999).'.';
         $pic = $ran.$ext;
@@ -113,6 +154,7 @@ class Uploader
     }
     
     
+    // will be replaced by pathinfo()
     private static function findexts($filename){ // $_FILES[ELEMENT_NAME][NAME] or as reletive to this class $file[name]
         //end(explode(".",strtolower($filename));
         $filename = strtolower($filename);
@@ -120,6 +162,23 @@ class Uploader
         $n = count($exts)-1;
         $exts = $exts[$n];
         return $exts;
+    }
+    
+    
+    public static function DisplayFilesize($filesize){ // $_FILES[ELEMENT_NAME][SIZE] or as relative to this class $file[size]
+        if(is_numeric($filesize)){
+            $decr = 1024; $step = 0;
+            $prefix = array('Byte','KB','MB','GB','TB','PB');
+            
+            while(($filesize / $decr) > 0.9){
+                $filesize = $filesize / $decr;
+                $step++;
+            }
+            return round($filesize,2).' '.$prefix[$step];
+        }else{
+            //return 'NaN';
+            return false;
+        }
     }
     
     
@@ -151,7 +210,7 @@ class Uploader
 
 echo '<br />';
 $target = SITE_URL.DS.'images';
-$target = SITE_ROOT.DS.'images';
+$target = SITE_ROOT.'images';
 if(isset($_POST['action']) && isset($_FILES['upload'])){
     $test = Uploader::Upload($_FILES['upload'], $target);
     if($test == false){
