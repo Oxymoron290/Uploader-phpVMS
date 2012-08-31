@@ -1,8 +1,8 @@
 <?php
 
-define('SITE_URL', 'http://usahq.net/wingsonair/woa');
-define('SITE_ROOT',  str_replace('core/common', '', dirname(__FILE__)));
-define('DS', '/');
+define('SITE_URL', 'http://localhost');
+define('SITE_ROOT',  str_replace('', '', dirname(__FILE__)));
+define('DS', DIRECTORY_SEPARATOR);
 
 class Uploader
 {
@@ -18,7 +18,7 @@ class Uploader
      * @return bool bool
      * 
      */
-    public function CheckUpload($folder=false){
+    public static function CheckUpload($folder=false){
         if(self::uploads_enabled == true){
             if($folder == false){
                 return true;
@@ -40,7 +40,7 @@ class Uploader
      * @return string bool Pathway to the file.
      * 
      */
-    public function Upload($file, $target){
+    public static function Upload($file, $target){
         $target = str_replace(SITE_URL.DS, SITE_ROOT, $target);
         if(self::CheckUpload($target) == false){
             //LogData::addLog(Auth::$userinfo->pilotid, 'A file upload was attempted, but denied due to local settings.');
@@ -72,19 +72,22 @@ class Uploader
     
     
     private static function CheckFile($file){
+        $file['name'] = strtolower($file['name']);
         if($file['error'] != 0){
             return $file['error'];
         }
+                
+        $ext = self::findexts($file['name']);
         
-        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_DENIED)){
+        if(in_array($ext, self::$uploads_DENIED)){
             $file['error'] = 8;
         }
         
-        if(!in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
+        if(!in_array($ext, self::$uploads_ALLOWED)){
             $file['error'] = 8;
         }
         
-        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
+        if(in_array($ext, self::$uploads_ALLOWED)){
             $file['error'] = 0;
         }
         
@@ -147,8 +150,8 @@ class Uploader
 
 
 echo '<br />';
-$target = SITE_URL.DS.'lib/images/awards/testing';
-$target = SITE_ROOT.'lib/images/awards/testing';
+$target = SITE_URL.DS.'images';
+$target = SITE_ROOT.DS.'images';
 if(isset($_POST['action']) && isset($_FILES['upload'])){
     $test = Uploader::Upload($_FILES['upload'], $target);
     if($test == false){

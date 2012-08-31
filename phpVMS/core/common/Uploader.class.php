@@ -32,7 +32,7 @@ class Uploader extends CodonData {
      * @return bool bool
      * 
      */
-    public function CheckUpload($folder=false){
+    public static function CheckUpload($folder=false){
         if(self::uploads_enabled == true){
             if($folder == false){
                 return true;
@@ -55,35 +55,48 @@ class Uploader extends CodonData {
      * @return string bool Pathway to the file.
      * 
      */
-    public function Upload($file, $target){
+    public static function Upload($file, $target){
+        if($file['error'] == 4) return false;
+        
+        $tmpFile = pathinfo($file['tmp_name']);
+        $tmpFile = $tmpFile['dirname'].DS.$tmpFile['basename'];
+        
+        if(!file_exists($tmpFile)) return false;
+        
         $target = str_replace(SITE_URL.DS, SITE_ROOT, $target);
         if(self::CheckUpload($target) == false){
             LogData::addLog(Auth::$userinfo->pilotid, 'A file upload was attempted, but denied due to local settings.');
+            unlink($tmpFile);
             return false;
         }
+        
         $check = self::CheckFile($file);
         if($check !== true){
             LogData::addLog(Auth::$userinfo->pilotid, self::GetError($check));
+            unlink($tmpFile);
             return false;
         }
-        
-        $pic = self::Rename($file['name']);
-        $target = $target.'/'.$pic;
-        
+            
+        $pic = self::Rename($file);
+        $target = $target.DS.$pic;
+            
         if(is_uploaded_file($file['tmp_name'])){
-            if(move_uploaded_file($file['tmp_name'], $target)){
-                $target2 = str_replace(SITE_ROOT, SITE_URL.DS, $target);
-                LogData::addLog(Auth::$userinfo->pilotid, 'The file "'.$file['name'].'" was successfully uploaded <a href="'.$target2.'">here</a>');
-                self::LogUpload($target, $target2);
-                return $target2;
+                if(move_uploaded_file($file['tmp_name'], $target)){
+                    $target2 = str_replace(SITE_ROOT, SITE_URL.DS, $target);
+                    LogData::addLog(Auth::$userinfo->pilotid, 'The file "'.$file['name'].'" was successfully uploaded <a href="'.$target2.'">here</a>');
+                    self::LogUpload($target, $target2);
+                    if(file_exists($tmpFile)) unlink($tmpFile); // file should have been moved so this should never happen.
+                    return $target2;
+                }else{
+                    LogData::addLog(Auth::$userinfo->pilotid, self::GetError(intval($file['error'])));
+                    if(file_exists($tmpFile)) unlink($tmpFile); // The only case this would happen is if the file wasn't moveable... this should never happen actually.
+                    return false;
+                }
             }else{
-                LogData::addLog(Auth::$userinfo->pilotid, self::GetError(intval($file['error'])));
-                return false;
+                LogData::addLog(Auth::$userinfo->pilotid, 'The file "'.$file['name'].'" was not uploaded due to a possible attack from '.$_SERVER["REMOTE_ADDR"]);
+                //unlink($tmpFile); // We will NOT want to delete the file it if !is_uploaded_file()
+                return false; // File was not uploaded via HTTP POST
             }
-        }else{
-            LogData::addLog(Auth::$userinfo->pilotid, 'The file "'.$file['name'].'" was not uploaded due to a possible attack from '.$_SERVER["REMOTE_ADDR"]);
-            return false; // File was not uploaded via HTTP POST
-        }
     }
     
     
@@ -145,19 +158,24 @@ class Uploader extends CodonData {
     
     
     private static function CheckFile($file){
+        $file['name'] = strtolower($file['name']);
+        //$ext = self::findexts($file['name']); // Changed as requested by Nabeel Shahzad
+        $ext = pathinfo($file['name']);
+        $ext = $ext['extension'];
+        
         if($file['error'] != 0){
             return $file['error'];
         }
         
-        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_DENIED)){
+        if(in_array($ext, self::$uploads_DENIED)){
             $file['error'] = 8;
         }
         
-        if(!in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
+        if(!in_array($ext, self::$uploads_ALLOWED)){
             $file['error'] = 8;
         }
         
-        if(in_array(end(explode(".",strtolower($file['name']))), self::$uploads_ALLOWED)){
+        if(in_array($ext, self::$uploads_ALLOWED)){
             $file['error'] = 0;
         }
         
@@ -174,12 +192,25 @@ class Uploader extends CodonData {
     }
     
     
-    private static function Rename($filename){
-        $ext = self::findexts($filename);
+    private static function Rename($file){
+        //$ext = self::findexts($file); // Changed as requested by Nabeel Shahzad
+        $ext = pathinfo($file['name']);
+        $ext = $ext['extension'];
         $ran = time().'-';
         $ran .= rand(111111, 999999).'.';
         $pic = $ran.$ext;
         return $pic;
+    }
+    
+    
+    // will be replaced by pathinfo()
+    private static function findexts($filename){ // $_FILES[ELEMENT_NAME][NAME] or as reletive to this class $file[name]
+        //end(explode(".",strtolower($filename));
+        $filename = strtolower($filename);
+        $exts = explode(".", $filename);
+        $n = count($exts)-1;
+        $exts = $exts[$n];
+        return $exts;
     }
     
     
@@ -197,16 +228,6 @@ class Uploader extends CodonData {
             //return 'NaN';
             return false;
         }
-    }
-    
-    
-    private static function findexts($filename){ // $_FILES[ELEMENT_NAME][NAME] or as reletive to this class $file[name]
-        //end(explode(".",strtolower($filename));
-        $filename = strtolower($filename);
-        $exts = explode(".", $filename);
-        $n = count($exts)-1;
-        $exts = $exts[$n];
-        return $exts;
     }
     
     
